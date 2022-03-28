@@ -1,14 +1,13 @@
 <?php
 
-namespace Novatree\Wallet;
-use Mockery\CountValidator\Exception;
-use Basttyy\Wallet\model\AccountModel;
-use Basttyy\Wallet\model\AccountTypeModel;
-use Basttyy\Wallet\model\TransactionTypeModel;
-use Basttyy\Wallet\model\UserTotalBalance;
+namespace Basttyy\Wallet;
+use Basttyy\Wallet\model\Account;
+use Basttyy\Wallet\model\AccountType;
+use Basttyy\Wallet\model\TransactionType;
+use Basttyy\Wallet\model\UserBalance;
 use DB;
 
-class WalletApi {
+class Wallet {
     /**
      * This method is used for create a transaction
      * @param $account_type is account type id
@@ -22,7 +21,7 @@ class WalletApi {
 
     public function createTransaction($account_type,$transaction_type,$amount,$date,$user_id,$transaction_status = 1) {
         try {
-            $account_model = new AccountModel();
+            $account_model = new Account();
             $account_model->create([
                 'user_id' => $user_id,
                 'amount' => $amount,
@@ -52,7 +51,7 @@ class WalletApi {
      */
     public function getUserTransaction($user_id=0,$transaction_id=0,$transaction_date=null,$account_type=null,$transaction_type = null,$transaction_status = null) {
         try {
-            $account_model = new AccountModel();
+            $account_model = new Account();
             $data = array();
             $data = $account_model->where(function ($query) use ($user_id) {
                 if($user_id != 0) {
@@ -100,7 +99,7 @@ class WalletApi {
      */
     public function createAccountType($name,$code,$status) {
         try {
-            $account_type_model = new AccountTypeModel();
+            $account_type_model = new AccountType();
             $account_type_model->create([
                 'name' => $name,
                 'code' => $code,
@@ -120,7 +119,7 @@ class WalletApi {
      */
     public function createTransactionType($code,$status) {
         try {
-            $transaction_model = new TransactionTypeModel();
+            $transaction_model = new TransactionType();
             $transaction_model->create([
                 'code' => $code,
                 'status' => $status
@@ -135,7 +134,7 @@ class WalletApi {
      * This method is used for update user total balance
      */
     public function updateUserTotalBalance($user_id,$amount) {
-        $user_total_balance_model = new UserTotalBalance();
+        $user_total_balance_model = new UserBalance();
         $user_total = $user_total_balance_model->find($user_id);
         if(!empty($user_total)) {
             $user_total->total_balance += $amount;
@@ -153,7 +152,7 @@ class WalletApi {
      * This method is used for fetch user wise balance by user Id
      */
     public function fetchUserBalance($user_id) {
-        $user_total_balance_model = new UserTotalBalance();
+        $user_total_balance_model = new Useralance();
         $user_total = $user_total_balance_model->where('user_id','=',$user_id)->get()->toArray();
         $balance = 0;
         if(!empty($user_total)) {
@@ -166,7 +165,7 @@ class WalletApi {
      * This method is used for rebuild user total balance
      */
     public function rebuildUserTotalBalance($user_id = 0) {
-        $user_total_balance_module = new UserTotalBalance();
+        $user_total_balance_module = new UserBalance();
         $users_total = DB::table('account')
             ->select(DB::raw('sum(amount) as balance,user_id'))
             ->where(function ($query) use ($user_id){
@@ -210,13 +209,13 @@ class WalletApi {
             return array('error' => 'Please enter a valid transaction id');
         }
         else {
-            $account_model =new AccountModel();
+            $account_model =new Account();
             $transaction = $account_model->where('id','=',$transaction_id)->get()->toArray();
             $transaction = array_shift($transaction);
             $delete_transaction = $account_model->find($transaction_id);
             $delete_transaction->delete();
             if($transaction['transaction_status'] == 1) {
-                $user_total_model = new UserTotalBalance();
+                $user_total_model = new UserBalance();
                 $user_total = $user_total_model->find($transaction['user_id']);
                 if(!empty($user_total)) {
                     $user_total->total_balance -= $transaction['amount'];
@@ -249,7 +248,7 @@ class WalletApi {
             $save_transaction = $account_model->find($transaction_id);
             $save_transaction->transaction_status = $transaction_status;
             $save_transaction->save();
-            $user_total_model = new UserTotalBalance();
+            $user_total_model = new UserBalance();
             if($transaction_status == 1) {
                 $user_total = $user_total_model->find($transaction['user_id']);
                 if(!empty($user_total)) {
@@ -273,7 +272,7 @@ class WalletApi {
      * @param null $status
      */
     public function getAccountTypes($status = null) {
-        $account_type_model =new AccountTypeModel();
+        $account_type_model =new AccountType();
         $account_type = $account_type_model->where(function ($query) use ($status) {
             if($status != null)
                 return $query->where('status','=',$status);
@@ -286,16 +285,11 @@ class WalletApi {
      * @param null $status
      */
     public function getTransactionTypes($status = null) {
-        $transaction_type_model =new TransactionTypeModel();
+        $transaction_type_model =new TransactionType();
         $transaction_type = $transaction_type_model->where(function ($query) use ($status) {
             if($status != null)
                 return $query->where('status','=',$status);
         })->get()->toArray();
         return $transaction_type;
-    }
-
-    public function test()
-    {
-        return 'This is test method';
     }
 }
