@@ -1,0 +1,22 @@
+{
+    "name": "basttyy/wallet",
+    "description": "Simple Secure Banking Wallet",
+    "license": "MIT",
+    "keywords": ["wallet", "php", "laravel", "banking"],
+    "authors": [
+        {
+            "name": "Abdulbasit Mamman",
+            "email": "basttyydev@gmail.com"
+        }
+    ],
+    "require": {
+        "php": ">=7.2.0",
+        "illuminate/support": "^7.0",
+        "illuminate/contracts": "^7.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Basttyy\\Wallet\\": "src/"
+        }
+    }
+}
